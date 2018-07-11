@@ -100,6 +100,9 @@ CentOS内置Python2.7，迫于懒，就找了个3里面最新的稳定版装了
 #### 虚拟机
 在win端`ipconfig`获取虚拟机ip，在centos端`ifconfig`获取自身网络连接ip。进行互ping尝试。
 
+互ping：windows上ping centos的ip，centos上ping在win上虚拟机的ip
+假如不能互ping，使用`ifconfig ens33 192.168.10.X netmask 255.255.255.0 `修改ip
+
 `ssh-keygen`创建公钥
 
 #### cmd连接
@@ -126,7 +129,7 @@ CentOS内置Python2.7，迫于懒，就找了个3里面最新的稳定版装了
 	fork=true
 	bind_ip=0.0.0.0
 
-执行`/usr/local/mongodb/bin/mongod -f /usr/local/mongodb/bin/mongodb.config`
+执行`/usr/local/mongodb/bin/mongod -f /usr/local/mongodb/bin/mongodb.conf`
 
 可以设置开机自启动
 

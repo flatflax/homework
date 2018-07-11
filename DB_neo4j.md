@@ -77,3 +77,8 @@ neo4j通过编写Cypher命令来完成操作
 	
 	match(n:person{name:"Tom"})-[r:KNOWS]->(m:person{name:"Jenny"}) delete r
 	match(n:person{name:"Tom"}) delete n
+
+
+# 导入数据
+
+`LOAD CSV WITH HEADERS FROM "file:///reclike_c_test.csv" AS line MERGE (p:Product{id:line.product_id,name:line.product_name,price:line.product_price})`
