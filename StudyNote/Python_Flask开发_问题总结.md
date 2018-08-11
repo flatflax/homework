@@ -2,16 +2,7 @@
 
 ### 修改model数据时报错
 
-报错信息：`InvalidRequestError: Object '<User at 0x423b550>' is already attached to session '1' (this is '12')`
 
-原因：SQLAlchemy的对象db已经被初始化使用，不能提交两个`db.session`。在对model数据进行修改的时候，可以使用`from models import db`，然后再使用`db.session.add()`或者`db.session.delete()`等操作。
-
-### 表单需要传递PUT(修改)和DELETE(删除)请求
-
-解决方法：
-
-* 在表单中添加`<input type="hidden" name="_method" value="DELETE">`，在修饰函数中通过判断`request.form["_method"]`来确定增/删/改。
-* 传json
 
 ### 部署
 
