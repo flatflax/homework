@@ -9,6 +9,7 @@
 	* [Flask开发问题总结](./Python_Flask开发_问题总结.md)
 	* [装饰器和迭代器](./Python_装饰器和迭代器.md)	
 	* [并发简介](./Python_并发简介.md)
+	* [Python_简要记录](./Python_简要记录.md)
 * 爬虫
 	* [Selenium Webdriver介绍](./爬虫_Selenium_WebDriver.md)
 * 网络
