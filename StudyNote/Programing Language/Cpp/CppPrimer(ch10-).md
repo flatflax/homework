@@ -108,7 +108,7 @@ ADT以通用方式描述数据类型，但没有引入语言或实现细节。�
 
 ## ch11 类的使用
 
-操作符重载，友元函数，状态成员，类转换（自动转换和强制转换）
+友元函数，操作符重载(类成员函数或友元函数)，状态成员，类转换（自动转换和强制转换）
 
 #### 操作符重载
 
@@ -131,9 +131,96 @@ district = sid.+(sara);	// 隐式使用sid，显式使用sara
 
 #### 友元
 
-友元函数、友元类、友元成员函数。通过让函数成为类的友元，使该函数有和类的成员函数相同的访问权限，可以访问类的对象的私有部分。使用关键词`friend`声明和定义非成员函数作为友元函数。
+友元函数、友元类、友元成员函数。通过让函数成为类的友元，使该函数有和类的成员函数相同的访问权限，可以访问类的对象的私有部分(通过传入对象作为参数的形式)。使用关键词`friend`声明和定义非成员函数作为友元函数。友元函数不是类的组成部分。
 
 ```cpp
-friend Time oprator*(double m, const Time & t);
+// hpp
+class Time{
+public:
+	friend Time oprator*(double m, const Time & t);		// friend
+  ...
+};
+
+// cpp
+Time oprator*(double m, const Time & t){}		// 没有friend
 ```
+
+
+
+```cpp
+// 声明
+Time oprator+ (const Time & t) const;		// member-version;
+friend Time oprator+ (const Time & t1, const Time & t2);		//non-member-version
+
+T1 = T2 + T3;
+T1 = T2.oprator+(T3);		// member func
+T2 = oprator(T2, T3);		// non-member func
+```
+
+举例: 
+
+1. `std::ostream & oprator<< (std::ostream & os, const Time &t)`; 定义`<<`操作符，和cout一起使用，显示对象内容
+2. 矢量(vector)
+
+* 大小（长度）和方向（角度）描述矢量
+* 水平分量`x`和垂直分量`y`描述矢量
+
+#### 类型转换
+
+给标准型变量赋值另一标准型值时，假如两种类型兼容，cpp会自动进行转换，例：`long count = 8; int side = 3.3;`。但cpp不自动转换不兼容的类型，例：`int * p = 10; // type clash`。无法自动转换时可以进行强制类型转换。
+
+可以将构造函数用作自动类型转换函数。假如需要关闭该自动特性，可以在声明构造函数时使用关键字`explicit`
+
+```cpp
+// 声明
+Stonewt();
+explicit Stonewt(double lbs);		// no implicit conversions allowed
+Stonewt(int stn, double lbs);
+
+// 实例化
+Stonewt myCat;
+myCat = 19.6;		// invalid
+myCat = Stonewt(19.6);	// explicit conversion
+myCat = (Stonewt) 19.6;		// explicit typecast
+
+Stonewt Jumbo(7000); 		// convert int to double
+```
+
+**转换函数**是用户定义的强制类型转换。转换函数必须是类方法，不能指定返回类型，不能有参数。关键字`explict`不能用于转换函数。应该尽量使用显式转换，避免隐式转换。
+
+```cpp
+Stonewt woife(285.7);
+double host = double(woife);
+double thinker = (double) woife;
+double stats = woife;		// implicit
+
+// 转换函数 conversion functions
+operator typeName();
+//	exp
+operator int(); operator double();
+```
+
+转换函数、友元函数、成员函数的使用考量：如上，需要`Stonewt`量和`double`量相加，可以考虑以下两种方法：
+
+1. 定义友元函数`operator+(const Stonewt &, const Stonewt &)`，借助构造函数将`double`类参数转换为`Stonewt`类参数。优点：定义的函数少；缺点：转换时需要调用转换构造函数，增加时间和内存开销。
+
+2. 将加法操作符重载为显式使用`double`类型参数的函数。优点：运行速度较快；缺点：增加开发消耗。
+
+   ```cpp
+   Stonewt operator+(double x);		// 2.1
+   friend Stonewt oprator+(double x, Stonewt &);		// 2.2
+   
+   double kennyD = 3.5;
+   Stonewt total;
+   Stonewt jennySt(16.9);
+   
+   total = jennySt + kennyD;		// 2.1	jennySt.oprator+(kennyD)
+   total = kenny + jennySt;		// 2.2	oprator+(kenny, jennySt)
+   ```
+
+   
+
+## ch12 类和动态内存分配
+
+对类使用`new`和`delete`；动态内存对构造函数、折构函数、操作符重载的影响。
 
