@@ -259,3 +259,4 @@ namespace:
 - Default: extern linkage（除非引用常量）
 - using声明：`using namespace::declaration;` 使名称可用
 - using编译指令：`using namespace <name>;` 使所有名称可用
+
