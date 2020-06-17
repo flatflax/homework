@@ -1,4 +1,4 @@
-# CppPrimer(ch10-)
+# CppPrimerPlus(ch10-ch12)
 
 ## ch10 **面对对象编程和类设计**
 

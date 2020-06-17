@@ -1,4 +1,4 @@
-# CppPrimer(ch13-)
+# CppPrimerPlus(ch13-ch15)
 
 ## ch13 类继承
 
@@ -89,7 +89,7 @@ Singer * pt = (Singer *)&veep;
 
 ## Ch14 代码重用
 
-`has-a`关系，包含成员对象的类，私有和保护继承，类模板
+`has-a`关系，包含成员对象的类（包含），私有和保护继承，多重继承，类模板
 
 ##### 包含成员对象的类 class with object members / containment
 
@@ -216,4 +216,264 @@ SingingWaiter(const Work & wk, int p = 0, int v = Singer::other)
 对于类的同名成员（数据成员/函数成员）的优先度，派生类 > 祖先基类（间接/直接）。没有继承关系的类的同名成员间不具有优先度，假如不使用**作用域操作符**限定成员，将出现二义性。
 
 ##### 类模板 class template
+
+```cpp
+// original
+bool Stack::push(const Item & item){...}
+
+// template class
+template <typename Type>	// 类型参数Type
+bool Stack<Type>::push(const Type & item){...}
+
+// 非类型参数
+template <typename T, int n>	// 非类型参数n
+bool ArrayTP<T, n>::push(const Type & item){...}
+
+ArrayTP<double, 12> eggweights;	//	表达式参数
+ArrayTP< ArrayTP<int, 5>, 10> toodee;		// 递归使用模板
+
+// 默认类型参数,多个类型参数
+template<class T1, class T2=int> class Topo{...};
+```
+
+使用表达式参数方法的优点是可以根据非类型参数的值维护内存栈，提高执行效率。但是缺点是，在同类型参数值的情况下，会根据非类型参数的值生成不同的模板，生成独立的声明。
+
+###### 模版具体化specialization
+
+- 隐式实例化 Implicit Instantiations
+
+```cpp
+ArrayTP<double ,30> * pt;
+pt = new ArrayTP<double, 30>;		// 生成
+```
+
+编译器在需要对象前，不会生成该类的隐式实例化。
+
+- 显式实例化 Explicit Instantiations
+
+```cpp
+template class ArrayTP<string, 100>; // generate ArrayTP<string, 100> class
+```
+
+- 显式具现化 Explicit Specializations
+
+用于特定类型（对应模板的通用类型）的定义。
+
+* 部分具体化 Partial Specializations
+
+```cpp
+// general template
+template <class T1, class T2> class Pair {...};
+
+// specialization with T2 set to int
+template <class T1> class Pair<T1, int> {...};		// 部分具体化
+// specialization with T1 and T2 set to int 
+template <> class Pair<int, int> {...};						// 显式具体化
+```
+
+用于限制模板的通用性。如果有多个模板可供选择，编译器则使用具体化程度最高的模板。
+
+```cpp
+Pair<double, double> p1; // use general Pair template
+Pair<double, int> p2; // Pair<T1, int> 部分具体化 
+Pair<int, int> p3; // Pair<int, int> 显式具体化
+```
+
+###### 成员模板
+
+模板还可以作为结构、类、模板类的成员。
+
+###### 友元
+
+```cpp
+template <class T> class HasFriend
+{
+		friend void reports(HasFriend<T> &);	// 1. template parameter
+  	template <typename T> void report(T &); // 2. Bound Template Friend
+  	template <typename C, typename D> friend void show2(C &, D &);	// 3. Unbound Template Friend
+  	...
+};
+
+// 1. non-template friend to the HasFriend<int> class 
+void reports(HasFriend<int> & hf)
+{		cout <<”HasFriend<int>: “ << hf.item << endl; }
+
+// 2. 
+template <typename T> 
+void reports(T & hf)
+{  	cout << hf.item << endl; }
+
+// 3.
+template <typename C, typename D> 
+void show2(C & c, D & d) 
+{		cout << c.item << “, “ << d.item << endl; }
+```
+
+- 模板类的非模板友元函数
+
+友元函数会成为模板类所有实例的友元。但该类型的友元函数不是模板函数，只是使用模板作为参数，因此需要为使用的友元定义显式具体化（对特定的参数类型作函数定义）。
+
+- 模板类的约束模板友元函数
+
+需要满足三个条件：1) 类定义为模板类；2) 类中有模板友元函数声明；3) 为友元提供模板定义。在这种情况下，对每个类型，都有自己的友元函数`reports`。
+
+- 模板类的非约束模板友元函数
+
+通过在类内部声明模板，可以创建非约束友元函数，即每个函数具体化，都是每个类具体化的友元。
+
+## ch15 友元、异常及其他
+
+友元类、友元类方法、嵌套类。异常、异常类。RTTI。
+
+##### 友元
+
+###### 友元类
+
+用于实现不满足`is-a`,`has-a`的其他关系。可以定义两个类间的友元关系。友元声明在类声明中的位置不影响其作用。
+
+```cpp
+class Tv
+{ 	friend class Remote;...	};		// friend class
+
+class Remote{...}
+```
+
+###### 友元成员函数
+
+假如只想将特定的类成员成为友元，需要使用**前向声明**(forward declaration)。如下代码所示，因为当编译器处理友元成员函数`Reomote::set_chan`时，需要知道友元成员函数所属类`Remote`的定义，而该类函数定义又提及了`Tv`类对象，又需要知道`Tv`类定义。为了解决这种循环依赖，需要使用前向声明。但使用友元类，不需要使用前向声明。
+
+```cpp
+class Tv;		// forward declaration
+
+class Remote{...};
+class Tv{friend void Remote::set_chan(Tv & t, int c);...};	// friend member func
+```
+
+使用友元函数可以控制能够修改目标类的私有成员的函数数量。
+
+###### 其他友好关系
+
+- 互相作为友元类
+
+当两个类需要相互影响时，可以通过让类彼此成为对方的友元来实现。
+
+- 共同的友元
+
+当函数需要访问多个类的私有数据，可以将该函数作为两个类的友元函数。
+
+##### 嵌套类
+
+在另一个类中声明的类，被称为嵌套类。嵌套类和包含的区别在于：包含意味着将类对象作为另一个类的成员；而对类进行嵌套不创建成员，而是定义了一种类型，该类型在包含嵌套类声明的类中有效。通常用于避免名称混乱的问题。
+
+|           | 包含的类 | 包含的类的派生类 | outside        |
+| --------- | -------- | ---------------- | -------------- |
+| Private   | y        | n                | n              |
+| Protected | y        | y                | n              |
+| Public    | y        | y                | y,通过类限定符 |
+
+##### 异常
+
+###### `abort()`
+
+`abort()`向标准错误流(同`cerr`)发送错误消息`abnormal program termination`，然后终止程序，根据实现，会返回错误代码至操作系统或父进程，或者刷新文件缓冲区。
+
+```cpp
+#include <stdlib.h>			// cstdlib or stdlib.h
+#include <cstdlib>
+
+std::abort();
+```
+
+###### 返回错误码
+
+函数返回`bool`值来判断是否运行成功，同时修改传入的用于存储结果的引用参数。
+
+###### `try-catch`
+
+使用`throw`抛出异常，由`try-catch`捕获异常。可以使用不同的异常类型，通过`throw`抛出和`catch`捕获不同类型的对象，来进行不同的处理。
+
+```cpp
+try { func(); }
+catch(excep_func & ef){...}
+
+void func(){ ... throw excep_func(args); ...}
+```
+
+###### 堆栈解退 unwinding the stack
+
+正常函数运行时，堆栈存储子函数地址和自动变量地址，随着函数的运行会继续添加子函数的自动变量即子函数等地址，在函数结束`return`时回到父函数地址，释放相关自动变量。
+
+堆栈解退是指，当函数运行因异常而终止时，程序将释放堆栈的内存，直到找到位于`try`块的返回地址，处理从`try`到`throw`之间的内存。对于堆栈内的自动类对象，会调用类的析构函数。
+
+###### 其他异常特性
+
+正常运行的函数，返回语句将控制权返回到调用该函数的父函数中。而使用`try-catch`组合，`thorw`语句将控制权返回到包含可以捕获该异常的`try-catch`组合所在的函数。
+
+除此之外，引发异常时，编译器会创建临时拷贝，因为目标函数执行完之后，异常对象的内存将被回收。但`catch`块中依然使用引用的原因是，基类引用可以执行派生类对象，该`catch`块可以对异常类的派生类对象进行匹配。
+
+由于引发的异常对象将被第一个匹配的`catch`块捕获，因此，当存在多层次继承的异常派生类时，`catch`块的排列顺序应该和派生顺序相反。
+
+当异常未知时，可以使用`catch(...){ // statements };`来捕获任意异常。
+
+###### `exception类`
+
+使用`#include <exception>`中定义的`exception类`作为基类，定义派生异常类。c++库中也定义了很多常见的异常类型。
+
+###### 未捕获异常
+
+如果异常没有被捕获（没有`try`块或没有匹配的`catch`块），默认情况下，会导致程序异常停止：函数调用`terminate()`，默认情况下`terminate()`会调用`abort()`。可以使用`exception`头文件中的`set_terminate()`函数来修改`terminate()`的行为。
+
+假如引发了异常规范中没有的异常，程序将调用`unexpected()`函数：默认调用`terminate()`，然后`terminate()`调用`abort()`。可以通过`set_unexpeted()`修改行为。主要为以下两种方式：
+
+- 通过调用`terminate()`、`abort()`/`exit()`来终止程序
+- 引发新异常
+  - 新异常和原有异常规范匹配：被`catch()`捕获
+  - 不匹配原来的异常规范，异常规范中不包含`std::bad_exception`类型：调用`terminate()`
+  - 不匹配原来的异常规范，异常规范中包含`std::bad_exception`类型：被`std::bad_exception`替代
+
+##### RTTI
+
+RTTI是运行阶段类型识别(runtime type identification)的缩写。当想要调用派生类对象的非继承方法，或者出于调试目的，想要跟踪生成的对象类型时，可以使用RTTI确定对象的类型。
+
+支持RTTI的3个元素：
+
+- `dynamic_cast`操作符：使用基类指针生成派生类指针，或空指针。
+- `typeid`操作符：生成一个指出对象类型的值。
+- `type_info`结构：存储特定类型的信息。
+
+###### `dynamic_cast`操作符
+
+```cpp
+// 指针pt的类型是否可以安全转换为Type类型
+// 如果可以，返回pt地址，如果不可以，返回空指针
+dynamic_cast<Type *>(pt)
+```
+
+###### `type_id`操作符和`type_info`类
+
+```cpp
+type_id(Type) == type_id(*pt)		// return bool
+```
+
+##### 类型转换操作符
+
+为了使得类型转换过程更规范，c++添加了4个类型转换操作符：`dynamic_cast`, `const_cast`, `static_cast`, `reinterpret_cast`
+
+```cpp
+// type_name是expression所属类型的基类
+// 父子类下行转换有类型检查，消耗高
+dynamic_cast <type_name> (expression)	
+  
+// 改变值为const或volatile
+const_cast <type_name> (expression)	
+  
+// 基本类型间、父子类上下行、空指针->目标类型指针、任意->void
+// 不能转换掉expression的const、volatile、或者__unaligned属性
+static_cast <type_name> (expression)	
+
+// 不能：指针->整型/浮点型、函数指针<->数据指针
+reinterpret_cast <type_name> (expression)
+```
+
+
 
