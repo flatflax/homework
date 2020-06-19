@@ -461,7 +461,6 @@ type_id(Type) == type_id(*pt)		// return bool
 
 ```cpp
 // type_name是expression所属类型的基类
-// 父子类下行转换有类型检查，消耗高
 dynamic_cast <type_name> (expression)	
   
 // 改变值为const或volatile
